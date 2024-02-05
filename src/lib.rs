@@ -12,13 +12,12 @@ fn populate(ctx: &Context, args: Vec<RedisString>) -> RedisResult {
 
     let entries: Vec<String> = args.map(|arg| arg.to_string()).collect();
 
-    if let Some(filter) = key.get_value::<Xor>(&XOR_REDIS)? {
-        match filter.populate(entries) {
-            Ok(_) => RedisResult::Ok("Created filter".into()),
-            Err(_) => RedisResult::Err(redis_module::RedisError::Str("Error in filter creation")),
+    match Xor::populate(entries) {
+        Ok(filter) => {
+            key.set_value(&XOR_REDIS, filter)?;
+            RedisResult::Ok("Created filter".into())
         }
-    } else {
-        RedisResult::Err(redis_module::RedisError::Str("Filter not present"))
+        Err(_) => RedisResult::Err(redis_module::RedisError::Str("Error in filter creation")),
     }
 }
 
@@ -30,7 +29,7 @@ fn contains(ctx: &Context, args: Vec<RedisString>) -> RedisResult {
     let key = ctx.open_key_writable(&key);
 
     if let Some(filter) = key.get_value::<Xor>(&XOR_REDIS)? {
-        RedisResult::Ok(filter.contains(entry.to_string()).into())
+        RedisResult::Ok(filter.contains(&entry.to_string()).into())
     } else {
         RedisResult::Err(redis_module::RedisError::Str("Filter not present"))
     }

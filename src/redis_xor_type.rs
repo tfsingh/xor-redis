@@ -4,7 +4,7 @@ use redis_module::raw;
 use std::os::raw::c_void;
 
 pub static XOR_REDIS: RedisType = RedisType::new(
-    "RedisXorFilter",
+    "XorFilter",
     0,
     raw::RedisModuleTypeMethods {
         version: raw::REDISMODULE_TYPE_METHOD_VERSION as u64,

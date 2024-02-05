@@ -1,4 +1,4 @@
 notes.md
 /target
 **/.DS_Store
-dump.rdb
+**/*.rdb

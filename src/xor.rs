@@ -5,10 +5,8 @@ fn main() {
     let entries: Vec<String> = (0..40).map(|i| format!("entry{}", i)).collect();
     let x = entries.clone();
 
-    // Assuming a method 'populate' that takes an iterator of strings
     let xor_filter = Xor::populate(entries).unwrap();
 
-    // Check that all entries are reported as contained in the filter
     for entry in x.iter() {
         assert!(
             xor_filter.contains(entry),
@@ -17,7 +15,6 @@ fn main() {
         );
     }
 
-    // Check that a non-inserted entry is not contained. Note: This is not deterministic for a probabilistic filter like Xor
     assert!(
         !xor_filter.contains("not_in"),
         "Entry 'not_in' should not be contained in the filter"
@@ -71,7 +68,6 @@ impl Xor {
             block_length: (capacity as u32 / 3),
             fingerprints: vec![0; capacity as usize],
         };
-
         let block_length = (capacity / 3) as usize;
 
         let mut stack: Vec<KeyIndex> = vec![KeyIndex::default(); size];
@@ -108,7 +104,7 @@ impl Xor {
             let mut q1_size = scan_count(&mut q1, &sets1) as usize;
             let mut q2_size = scan_count(&mut q2, &sets2) as usize;
 
-            let mut stacksize: usize = 0;
+            let mut stack_size: usize = 0;
 
             while q0_size + q1_size + q2_size > 0 {
                 while q0_size > 0 {
@@ -121,8 +117,8 @@ impl Xor {
                     let hash = keyindexvar.hash;
                     let h1 = filter.geth1(hash) as usize;
                     let h2 = filter.geth2(hash) as usize;
-                    stack[stacksize] = keyindexvar.clone();
-                    stacksize += 1;
+                    stack[stack_size] = keyindexvar.clone();
+                    stack_size += 1;
                     sets1[h1].xormask ^= hash;
 
                     sets1[h1].count -= 1;
@@ -131,15 +127,15 @@ impl Xor {
                         q1[q1_size].hash = sets1[h1].xormask;
                         q1_size += 1;
                     }
+
                     sets2[h2].xormask ^= hash;
                     sets2[h2].count -= 1;
-                    if sets1[h2].count == 1 {
+                    if sets2[h2].count == 1 {
                         q2[q2_size].index = h2 as u32;
                         q2[q2_size].hash = sets2[h2].xormask;
                         q2_size += 1;
                     }
                 }
-
                 while q1_size > 0 {
                     q1_size -= 1;
                     let keyindexvar = &mut q1[q1_size];
@@ -151,15 +147,17 @@ impl Xor {
                     let h0 = filter.geth0(hash) as usize;
                     let h2 = filter.geth2(hash) as usize;
                     keyindexvar.index += filter.block_length as u32;
-                    stack[stacksize] = keyindexvar.clone();
-                    stacksize += 1;
+                    stack[stack_size] = keyindexvar.clone();
+                    stack_size += 1;
                     sets0[h0].xormask ^= hash;
                     sets0[h0].count -= 1;
+
                     if sets0[h0].count == 1 {
                         q0[q0_size].index = h0 as u32;
                         q0[q0_size].hash = sets0[h0].xormask;
                         q0_size += 1;
                     }
+
                     sets2[h2].xormask ^= hash;
                     sets2[h2].count -= 1;
                     if sets2[h2].count == 1 {
@@ -168,7 +166,6 @@ impl Xor {
                         q2_size += 1;
                     }
                 }
-
                 while q2_size > 0 {
                     q2_size -= 1;
                     let keyindexvar = &mut q2[q2_size];
@@ -180,16 +177,17 @@ impl Xor {
                     let h0 = filter.geth0(hash) as usize;
                     let h1 = filter.geth1(hash) as usize;
                     keyindexvar.index += 2 * filter.block_length as u32;
-
-                    stack[stacksize] = keyindexvar.clone();
-                    stacksize += 1;
+                    stack[stack_size] = keyindexvar.clone();
+                    stack_size += 1;
                     sets0[h0].xormask ^= hash;
                     sets0[h0].count -= 1;
+
                     if sets0[h0].count == 1 {
                         q0[q0_size].index = h0 as u32;
                         q0[q0_size].hash = sets0[h0].xormask;
                         q0_size += 1;
                     }
+
                     sets1[h1].xormask ^= hash;
                     sets1[h1].count -= 1;
                     if sets1[h1].count == 1 {
@@ -200,7 +198,7 @@ impl Xor {
                 }
             }
 
-            if stacksize == size {
+            if stack_size == size {
                 break;
             }
 
@@ -229,15 +227,13 @@ impl Xor {
             } else if ki.index < 2 * filter.block_length {
                 val ^= filter.fingerprints[filter.geth0(ki.hash) as usize]
                     ^ filter.fingerprints
-                        [(filter.geth2(ki.hash) + 2 * filter.block_length) as usize]
+                        [(filter.geth2(ki.hash) + 2 * filter.block_length) as usize];
             } else {
                 val ^= filter.fingerprints[filter.geth0(ki.hash) as usize]
-                    ^ filter.fingerprints[(filter.geth1(ki.hash) + filter.block_length) as usize]
+                    ^ filter.fingerprints[(filter.geth1(ki.hash) + filter.block_length) as usize];
             }
-
             filter.fingerprints[ki.index as usize] = val;
         }
-
         Ok(filter)
     }
 

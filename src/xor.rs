@@ -1,6 +1,29 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
+fn main() {
+    let entries: Vec<String> = (0..40).map(|i| format!("entry{}", i)).collect();
+    let x = entries.clone();
+
+    // Assuming a method 'populate' that takes an iterator of strings
+    let xor_filter = Xor::populate(entries).unwrap();
+
+    // Check that all entries are reported as contained in the filter
+    for entry in x.iter() {
+        assert!(
+            xor_filter.contains(entry),
+            "Entry {} should be contained in the filter",
+            entry
+        );
+    }
+
+    // Check that a non-inserted entry is not contained. Note: This is not deterministic for a probabilistic filter like Xor
+    assert!(
+        !xor_filter.contains("not_in"),
+        "Entry 'not_in' should not be contained in the filter"
+    );
+}
+
 #[derive(Debug)]
 pub struct Xor {
     seed: u64,
@@ -33,17 +56,19 @@ impl Xor {
 
     pub fn populate(entries: Vec<String>) -> Result<Self, String> {
         let mut keys: Vec<u64> = entries.iter().map(|entry| hash_entry(entry)).collect();
+
         let mut size = keys.len();
         if size == 0 {
             return Err(String::from("Filter requires at least one entry"));
         }
-        let mut capacity = 32 + ((1.23 * size as f64).ceil() as u32);
+
+        let mut capacity = 32 + ((1.23 * size as f64).ceil() as usize);
         capacity = capacity / 3 * 3;
 
         let mut rngcounter: u64 = 1;
         let mut filter = Xor {
             seed: splitmix64(&mut rngcounter),
-            block_length: (capacity / 3),
+            block_length: (capacity as u32 / 3),
             fingerprints: vec![0; capacity as usize],
         };
 
@@ -155,6 +180,7 @@ impl Xor {
                     let h0 = filter.geth0(hash) as usize;
                     let h1 = filter.geth1(hash) as usize;
                     keyindexvar.index += 2 * filter.block_length as u32;
+
                     stack[stacksize] = keyindexvar.clone();
                     stacksize += 1;
                     sets0[h0].xormask ^= hash;

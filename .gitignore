@@ -2,3 +2,7 @@ notes.md
 /target
 **/.DS_Store
 **/*.rdb
+**/*.o
+**/__pycache__
+**/.pytest_cache
+**/.vscode

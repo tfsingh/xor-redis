@@ -6,7 +6,5 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
-[target.'cfg(target_arch = "aarch64")'.dependencies]
-
 [dependencies]
 redis-module = "*"

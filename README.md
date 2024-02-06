@@ -8,7 +8,7 @@ Implementation of an [Xor filter](https://arxiv.org/pdf/1912.08258.pdf) (a proba
 
 ### API
 
-####**`XOR.POPULATE`**
+**`XOR.POPULATE`**
 
 Initializes an XOR filter with a set of entries. Overwrites existing data under the same key.
 
@@ -17,7 +17,7 @@ Args
 - **Key:** Identifier for the filter.
 - **Entries:** List of objects to include.
 
-####**`XOR.CONTAINS`**
+**`XOR.CONTAINS`**
 
 Checks for an entry's presence in the filter. Like Bloom filters, may return false positives but no false negatives.
 

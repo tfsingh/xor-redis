@@ -1,26 +1,6 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-fn main() {
-    let entries: Vec<String> = (0..40).map(|i| format!("entry{}", i)).collect();
-    let x = entries.clone();
-
-    let xor_filter = Xor::populate(entries).unwrap();
-
-    for entry in x.iter() {
-        assert!(
-            xor_filter.contains(entry),
-            "Entry {} should be contained in the filter",
-            entry
-        );
-    }
-
-    assert!(
-        !xor_filter.contains("not_in"),
-        "Entry 'not_in' should not be contained in the filter"
-    );
-}
-
 #[derive(Debug)]
 pub struct Xor {
     seed: u64,
